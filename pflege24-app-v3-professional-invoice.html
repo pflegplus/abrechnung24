@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pflege24 Abrechnung Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+:root {
+    --primary: #5B8DEF;
+    --primary-dark: #4A7AD9;
+    --primary-light: #EEF4FF;
+    --primary-gradient: linear-gradient(135deg, #5B8DEF 0%, #7BA3F7 100%);
+    --secondary: #6DD49E;
+    --secondary-dark: #5BC489;
+    --secondary-light: #E8F8F0;
+    --white: #FFFFFF;
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --gray-900: #111827;
+    --success: #10B981;
+    --success-light: #D1FAE5;
+    --warning: #F59E0B;
+    --warning-light: #FEF3C7;
+    --error: #EF4444;
+    --error-light: #FEE2E2;
+    --info: #3B82F6;
+    --info-light: #DBEAFE;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-sans); background: var(--gray-50); color: var(--gray-800); line-height: 1.6; min-height: 100vh; }
+.app-container { display: flex; min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar { width: 260px; background: var(--white); border-right: 1px solid var(--gray-200); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+.logo { padding: 24px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; gap: 12px; }
+.logo-text { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+.logo-text span { color: var(--secondary); }
+.nav-menu { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-md); color: var(--gray-600); text-decoration: none; font-weight: 500; font-size: 0.9375rem; transition: all var(--transition-fast); cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+.nav-item:hover { background: var(--gray-100); color: var(--gray-800); }
+.nav-item.active { background: var(--primary-light); color: var(--primary); }
+.nav-icon { font-size: 1.25rem; width: 24px; text-align: center; }
+.sidebar-footer { padding: 16px 24px; border-top: 1px solid var(--gray-100); background: var(--gray-50); }
+.connection-status { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--gray-500); }
+.status-dot { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--gray-400); }
+.status-dot.connected { background: var(--success); box-shadow: 0 0 0 3px var(--success-light); animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+/* MAIN CONTENT */
+.main-content { flex: 1; margin-left: 260px; padding: 32px; max-width: 1400px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+.header h1 { font-size: 1.75rem; font-weight: 700; color: var(--gray-900); }
+.subtitle { color: var(--gray-500); font-size: 0.9375rem; margin-top: 4px; }
+.current-date { font-size: 0.875rem; color: var(--gray-500); background: var(--white); padding: 8px 16px; border-radius: var(--radius-full); border: 1px solid var(--gray-200); }
+.content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+
+/* CARDS */
+.card { background: var(--white); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200); overflow: hidden; }
+.card-header { padding: 20px 24px; border-bottom: 1px solid var(--gray-100); }
+.card-header h2 { font-size: 1rem; font-weight: 600; color: var(--gray-800); display: flex; align-items: center; gap: 8px; }
+.card-body { padding: 24px; }
+
+/* FORM ELEMENTS */
+.form-group { margin-bottom: 24px; }
+.form-group > label { display: block; font-size: 0.8125rem; font-weight: 600; color: var(--gray-700); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+.toggle-group { display: flex; background: var(--gray-100); padding: 4px; border-radius: var(--radius-lg); gap: 4px; }
+.toggle-btn { flex: 1; padding: 12px 16px; border: none; background: transparent; border-radius: var(--radius-md); font-family: inherit; font-weight: 600; font-size: 0.875rem; color: var(--gray-500); cursor: pointer; transition: all var(--transition-fast); }
+.toggle-btn:hover { color: var(--gray-700); }
+.toggle-btn.active { background: var(--white); color: var(--primary); box-shadow: var(--shadow-sm); }
+.select-wrapper { display: flex; gap: 8px; }
+.select-wrapper select { flex: 1; padding: 12px 16px; border: 1px solid var(--gray-300); border-radius: var(--radius-md); font-family: inherit; font-size: 0.9375rem; background: var(--white); cursor: pointer; }
+.select-wrapper select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+.btn-refresh { width: 44px; height: 44px; border: 1px solid var(--gray-300); border-radius: var(--radius-md); background: var(--white); font-size: 1.125rem; cursor: pointer; transition: all var(--transition-fast); }
+.btn-refresh:hover { background: var(--gray-50); transform: rotate(180deg); }
+.date-range { display: flex; align-items: center; gap: 12px; }
+.date-input { flex: 1; }
+.date-input label { display: block; font-size: 0.75rem; color: var(--gray-500); margin-bottom: 4px; }
+.date-input input { width: 100%; padding: 12px 16px; border: 1px solid var(--gray-300); border-radius: var(--radius-md); font-family: inherit; font-size: 0.9375rem; }
+.date-input input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+.date-separator { color: var(--gray-400); font-size: 1.25rem; margin-top: 18px; }
+
+/* Product Cards */
+.product-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.product-card { padding: 16px; border: 2px solid var(--gray-200); border-radius: var(--radius-lg); text-align: center; cursor: pointer; transition: all var(--transition-fast); background: var(--white); }
+.product-card:hover { border-color: var(--primary-light); background: var(--gray-50); transform: translateY(-2px); }
+.product-card.active { border-color: var(--primary); background: var(--primary-light); }
+.product-card.hidden { display: none; }
+.product-name { display: block; font-weight: 600; font-size: 0.9375rem; color: var(--gray-800); margin-bottom: 4px; }
+.product-price { font-family: var(--font-mono); font-size: 0.875rem; color: var(--primary); font-weight: 600; }
+
+/* Zuschläge */
+.zuschlaege-grid { display: flex; flex-direction: column; gap: 8px; }
+.zuschlag-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--gray-50); border-radius: var(--radius-md); border: 1px solid transparent; transition: all var(--transition-fast); cursor: pointer; }
+.zuschlag-item:hover { background: var(--gray-100); }
+.zuschlag-item:has(input:checked) { background: var(--primary-light); border-color: var(--primary); }
+.zuschlag-item.hidden { display: none; }
+.zuschlag-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+.zuschlag-item label { flex: 1; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.zuschlag-name { font-weight: 500; font-size: 0.9375rem; color: var(--gray-700); }
+.zuschlag-preis { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--secondary-dark); font-weight: 600; }
+.zuschlag-preis small { color: var(--gray-400); font-weight: 400; }
+.zuschlag-item.einmalig { border-left: 3px solid var(--warning); }
+.zuschlag-item.taeglich { border-left: 3px solid var(--secondary); }
+
+/* Buttons */
+.btn-calculate { width: 100%; padding: 16px 24px; background: var(--primary-gradient); color: var(--white); border: none; border-radius: var(--radius-lg); font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all var(--transition-fast); box-shadow: var(--shadow-md), 0 4px 14px rgba(91, 141, 239, 0.4); margin-top: 24px; }
+.btn-calculate:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg), 0 6px 20px rgba(91, 141, 239, 0.5); }
+
+/* Result Panel */
+.result-panel { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 32px; }
+.result-placeholder { text-align: center; padding: 48px 24px; color: var(--gray-400); }
+.placeholder-icon { font-size: 3.5rem; display: block; margin-bottom: 16px; opacity: 0.5; }
+.result-content { animation: slideUp 0.3s ease; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.result-header { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--gray-100); }
+.result-header h3 { font-size: 1.25rem; font-weight: 700; color: var(--gray-900); }
+.result-zeitraum { font-size: 0.875rem; color: var(--gray-500); margin-top: 4px; }
+.calculation-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.calc-row { text-align: center; padding: 16px; background: var(--gray-50); border-radius: var(--radius-lg); }
+.calc-label { display: block; font-size: 0.6875rem; font-weight: 600; color: var(--gray-500); text-transform: uppercase; margin-bottom: 8px; }
+.calc-value { font-family: var(--font-mono); font-size: 1.75rem; font-weight: 700; color: var(--gray-800); }
+.calc-value.highlight { color: var(--warning); }
+.divider { height: 1px; background: var(--gray-100); margin: 20px 0; }
+.cost-breakdown { margin-bottom: 20px; }
+.cost-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--gray-200); }
+.cost-row:last-child { border-bottom: none; }
+.cost-label { color: var(--gray-600); }
+.cost-amount { font-family: var(--font-mono); font-weight: 600; color: var(--gray-800); }
+.total-row { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--primary-gradient); border-radius: var(--radius-lg); color: var(--white); box-shadow: 0 4px 14px rgba(91, 141, 239, 0.4); }
+.total-label { font-weight: 600; font-size: 1rem; }
+.total-amount { font-family: var(--font-mono); font-size: 1.75rem; font-weight: 700; }
+.feiertage-details { margin-top: 20px; padding: 16px; background: var(--warning-light); border-radius: var(--radius-md); border-left: 3px solid var(--warning); }
+.feiertage-details h4 { font-size: 0.875rem; font-weight: 600; color: var(--warning); margin-bottom: 8px; }
+.feiertage-details ul { list-style: none; }
+.feiertage-details li { font-size: 0.8125rem; color: var(--gray-600); padding: 4px 0; }
+
+/* Action Buttons */
+.action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn-action { padding: 16px; border-radius: var(--radius-lg); font-family: inherit; font-size: 0.9375rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all var(--transition-fast); }
+.btn-pdf { background: var(--white); color: var(--gray-700); border: 2px solid var(--gray-200); }
+.btn-pdf:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+.btn-hubspot { background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%); color: var(--white); border: none; box-shadow: 0 4px 14px rgba(109, 212, 158, 0.4); }
+.btn-hubspot:hover { transform: translateY(-2px); }
+
+/* Toast */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 12px; }
+.toast { padding: 16px 20px; border-radius: var(--radius-lg); color: var(--white); font-weight: 500; box-shadow: var(--shadow-lg); animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 12px; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+.toast.success { background: linear-gradient(135deg, var(--success) 0%, #059669 100%); }
+.toast.error { background: linear-gradient(135deg, var(--error) 0%, #DC2626 100%); }
+.toast.info { background: linear-gradient(135deg, var(--info) 0%, #2563EB 100%); }
+
+/* Loading */
+.loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; flex-direction: column; gap: 16px; z-index: 2000; }
+.loading-overlay.active { display: flex; }
+.loading-spinner { width: 48px; height: 48px; border: 3px solid var(--gray-200); border-top-color: var(--primary); border-radius: var(--radius-full); animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 3000; padding: 20px; }
+.modal-overlay.active { display: flex; }
+.modal { background: var(--white); border-radius: var(--radius-xl); max-width: 800px; width: 100%; max-height: 90vh; overflow: hidden; box-shadow: var(--shadow-lg); animation: modalIn 0.3s ease; }
+@keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: center; }
+.modal-header h2 { font-size: 1.25rem; font-weight: 700; color: var(--gray-900); display: flex; align-items: center; gap: 8px; }
+.modal-close { width: 36px; height: 36px; border: none; background: var(--gray-100); border-radius: var(--radius-full); font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.modal-close:hover { background: var(--gray-200); }
+.modal-body { padding: 24px; max-height: 60vh; overflow-y: auto; }
+
+/* Feiertage Table */
+.feiertage-table { width: 100%; border-collapse: collapse; }
+.feiertage-table th { background: var(--gray-100); padding: 12px 16px; text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--gray-700); }
+.feiertage-table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); font-size: 0.875rem; }
+.feiertage-table tr:hover { background: var(--gray-50); }
+.feiertage-table .year-header { background: var(--primary-light); color: var(--primary); font-weight: 700; text-align: center; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 600; }
+.badge-fixed { background: var(--info-light); color: var(--info); }
+.badge-variable { background: var(--warning-light); color: var(--warning); }
+
+/* Responsive */
+@media (max-width: 1200px) { .content-grid { grid-template-columns: 1fr; } .result-panel { position: static; } }
+@media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 16px; } .product-cards { grid-template-columns: repeat(2, 1fr); } .calculation-details { grid-template-columns: 1fr; } .action-buttons { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <span class="logo-text">PflegePlus<span>24</span></span>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-page="abrechnung">
+                    <span class="nav-icon">📊</span>
+                    <span>Abrechnung</span>
+                </button>
+                <button class="nav-item" data-page="hinweis" id="btnHinweis">
+                    <span class="nav-icon">📅</span>
+                    <span>Feiertage Info</span>
+                </button>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">👥</span>
+                    <span>Klienten</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">👩‍⚕️</span>
+                    <span>Betreuungskräfte</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    <span>Aufträge</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Einstellungen</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="connection-status">
+                    <span class="status-dot connected"></span>
+                    <span>HubSpot verbunden</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <h1>Monatsabrechnung</h1>
+                    <p class="subtitle">Erstellen Sie Abrechnungen für Ihre Klienten</p>
+                </div>
+                <div class="header-right">
+                    <span class="current-date" id="currentDate"></span>
+                </div>
+            </header>
+
+            <div class="content-grid">
+                <section class="form-panel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>📝 Abrechnungsdaten</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Vertragsart</label>
+                                <div class="toggle-group">
+                                    <button type="button" class="toggle-btn active" data-vertragsart="pflegeplus24">PflegePlus24</button>
+                                    <button type="button" class="toggle-btn" data-vertragsart="betreuung24">Betreuung24</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="klientSelect">Klient auswählen</label>
+                                <div class="select-wrapper">
+                                    <select id="klientSelect"><option value="">-- Klient wählen --</option></select>
+                                    <button type="button" class="btn-refresh" id="refreshKlienten" title="Klienten neu laden">🔄</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Abrechnungszeitraum</label>
+                                <div class="date-range">
+                                    <div class="date-input">
+                                        <label for="startDatum">Von</label>
+                                        <input type="date" id="startDatum">
+                                    </div>
+                                    <span class="date-separator">→</span>
+                                    <div class="date-input">
+                                        <label for="endDatum">Bis</label>
+                                        <input type="date" id="endDatum">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Dienstleistungspaket</label>
+                                <div class="product-cards" id="produktCards">
+                                    <div class="product-card" data-produkt="bronze" data-preis-pp24="92" data-preis-bt24="87">
+                                        <span class="product-name">Bronze</span>
+                                        <span class="product-price"><span class="price-value">92</span>€/Tag</span>
+                                    </div>
+                                    <div class="product-card" data-produkt="silber" data-preis-pp24="99" data-preis-bt24="100">
+                                        <span class="product-name">Silber</span>
+                                        <span class="product-price"><span class="price-value">99</span>€/Tag</span>
+                                    </div>
+                                    <div class="product-card" data-produkt="silber-plus" data-preis-pp24="109" data-preis-bt24="0">
+                                        <span class="product-name">Silber Plus</span>
+                                        <span class="product-price"><span class="price-value">109</span>€/Tag</span>
+                                    </div>
+                                    <div class="product-card" data-produkt="gold" data-preis-pp24="119" data-preis-bt24="110">
+                                        <span class="product-name">Gold</span>
+                                        <span class="product-price"><span class="price-value">119</span>€/Tag</span>
+                                    </div>
+                                    <div class="product-card" data-produkt="exclusive" data-preis-pp24="129" data-preis-bt24="0">
+                                        <span class="product-name">Exclusive</span>
+                                        <span class="product-price"><span class="price-value">129</span>€/Tag</span>
+                                    </div>
+                                    <div class="product-card hidden" data-produkt="platin" data-preis-pp24="0" data-preis-bt24="123">
+                                        <span class="product-name">Platin</span>
+                                        <span class="product-price"><span class="price-value">123</span>€/Tag</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Zuschläge</label>
+                                <div class="zuschlaege-grid" id="zuschlaege">
+                                    <div class="zuschlag-item einmalig">
+                                        <input type="checkbox" id="startgebuehr" data-einmalig="true" data-preis-pp24="300" data-preis-bt24="300">
+                                        <label for="startgebuehr">
+                                            <span class="zuschlag-name">Startgebühr</span>
+                                            <span class="zuschlag-preis">300€ <small>(einmalig)</small></span>
+                                        </label>
+                                    </div>
+                                    <div class="zuschlag-item einmalig">
+                                        <input type="checkbox" id="expressService" data-einmalig="true" data-preis-pp24="350" data-preis-bt24="300">
+                                        <label for="expressService">
+                                            <span class="zuschlag-name">Express Service</span>
+                                            <span class="zuschlag-preis"><span class="preis-value">350</span>€ <small>(einmalig)</small></span>
+                                        </label>
+                                    </div>
+                                    <div class="zuschlag-item taeglich">
+                                        <input type="checkbox" id="fuehrerschein" data-einmalig="false" data-preis-pp24="10" data-preis-bt24="8">
+                                        <label for="fuehrerschein">
+                                            <span class="zuschlag-name">Führerschein</span>
+                                            <span class="zuschlag-preis">+<span class="preis-value">10</span>€/Tag</span>
+                                        </label>
+                                    </div>
+                                    <div class="zuschlag-item taeglich">
+                                        <input type="checkbox" id="zweitePersonHaushalt" data-einmalig="false" data-preis-pp24="10" data-preis-bt24="4">
+                                        <label for="zweitePersonHaushalt">
+                                            <span class="zuschlag-name">Zweite Person im Haushalt</span>
+                                            <span class="zuschlag-preis">+<span class="preis-value">10</span>€/Tag</span>
+                                        </label>
+                                    </div>
+                                    <div class="zuschlag-item taeglich">
+                                        <input type="checkbox" id="zweiteBetreuendePerson" data-einmalig="false" data-preis-pp24="20" data-preis-bt24="15">
+                                        <label for="zweiteBetreuendePerson">
+                                            <span class="zuschlag-name">Zweite zu betreuende Person</span>
+                                            <span class="zuschlag-preis">+<span class="preis-value">20</span>€/Tag</span>
+                                        </label>
+                                    </div>
+                                    <div class="zuschlag-item taeglich">
+                                        <input type="checkbox" id="sonderbetreuung" data-einmalig="false" data-preis-pp24="15" data-preis-bt24="10">
+                                        <label for="sonderbetreuung">
+                                            <span class="zuschlag-name">Sonderbetreuung</span>
+                                            <span class="zuschlag-preis">+<span class="preis-value">15</span>€/Tag</span>
+                                        </label>
+                                    </div>
+                                    <div class="zuschlag-item taeglich pp24-only">
+                                        <input type="checkbox" id="seniorenbetreuungPro" data-einmalig="false" data-preis-pp24="50" data-preis-bt24="0">
+                                        <label for="seniorenbetreuungPro">
+                                            <span class="zuschlag-name">Seniorenbetreuung PRO</span>
+                                            <span class="zuschlag-preis">+50€/Tag</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-calculate" id="calculateBtn">
+                                <span>🧮</span> Berechnen
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="result-panel">
+                    <div class="card result-card">
+                        <div class="card-header">
+                            <h2>📊 Berechnungsergebnis</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="result-placeholder" id="resultPlaceholder">
+                                <span class="placeholder-icon">📋</span>
+                                <p>Wählen Sie einen Klienten und klicken Sie auf "Berechnen"</p>
+                            </div>
+                            <div class="result-content" id="resultContent" style="display: none;">
+                                <div class="result-header">
+                                    <h3 id="resultKlientName">-</h3>
+                                    <span class="result-zeitraum" id="resultZeitraum">-</span>
+                                </div>
+                                <div class="calculation-details">
+                                    <div class="calc-row">
+                                        <span class="calc-label">Arbeitstage</span>
+                                        <span class="calc-value" id="calcArbeitstage">0</span>
+                                    </div>
+                                    <div class="calc-row">
+                                        <span class="calc-label">Feiertage (2x)</span>
+                                        <span class="calc-value highlight" id="calcFeiertage">0</span>
+                                    </div>
+                                    <div class="calc-row">
+                                        <span class="calc-label">Saisontage</span>
+                                        <span class="calc-value" id="calcSaisontage">0</span>
+                                    </div>
+                                </div>
+                                <div class="divider"></div>
+                                <div class="cost-breakdown">
+                                    <div class="cost-row"><span class="cost-label">Grundvergütung</span><span class="cost-amount" id="costGrund">0,00 €</span></div>
+                                    <div class="cost-row" id="rowFeiertag" style="display: none;"><span class="cost-label">Feiertagszuschlag</span><span class="cost-amount" id="costFeiertag">0,00 €</span></div>
+                                    <div class="cost-row" id="rowSaison" style="display: none;"><span class="cost-label">Saisonzuschlag</span><span class="cost-amount" id="costSaison">0,00 €</span></div>
+                                    <div class="cost-row" id="rowZuschlaegeTaeglich" style="display: none;"><span class="cost-label">Tägliche Zuschläge</span><span class="cost-amount" id="costZuschlaegeTaeglich">0,00 €</span></div>
+                                    <div class="cost-row" id="rowZuschlaegeEinmalig" style="display: none;"><span class="cost-label">Einmalige Gebühren</span><span class="cost-amount" id="costZuschlaegeEinmalig">0,00 €</span></div>
+                                </div>
+                                <div class="total-row">
+                                    <span class="total-label">Gesamtbetrag</span>
+                                    <span class="total-amount" id="totalAmount">0,00 €</span>
+                                </div>
+                                <div class="feiertage-details" id="feiertageDetails" style="display: none;">
+                                    <h4>📅 Feiertage im Zeitraum</h4>
+                                    <ul id="feiertageList"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-buttons" id="actionButtons" style="display: none;">
+                        <button type="button" class="btn-action btn-pdf" id="exportPdf"><span>📄</span> PDF exportieren</button>
+                        <button type="button" class="btn-action btn-hubspot" id="saveHubspot"><span>💾</span> In HubSpot speichern</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Feiertage Modal -->
+    <div class="modal-overlay" id="feiertageModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>📅 Feiertage Übersicht (gemäß Vertrag)</h2>
+                <button class="modal-close" id="closeModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--gray-600);">
+                    An den folgenden Feiertagen und Sondertagen wird sowohl die Tagesvergütung als auch das Zusatzhonorar in <strong>doppelter Höhe (+100%)</strong> gezahlt:
+                </p>
+                <table class="feiertage-table" id="feiertageTable"></table>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div><p>Wird geladen...</p></div>
+
+    <script>
+// ========================================
+// FEIERTAGE - NUR SÖZLEŞMEDE BELİRTİLENLER
+// 2025, 2026, 2027 için sabit tarihler
+// ========================================
+const FEIERTAGE_DATA = {
+    2025: [
+        { datum: '01.01.2025', name: 'Neujahr', tag: 'Mittwoch', typ: 'fest' },
+        { datum: '18.04.2025', name: 'Karfreitag', tag: 'Freitag', typ: 'variabel' },
+        { datum: '20.04.2025', name: 'Ostersonntag', tag: 'Sonntag', typ: 'variabel' },
+        { datum: '21.04.2025', name: 'Ostermontag', tag: 'Montag', typ: 'variabel' },
+        { datum: '01.05.2025', name: 'Erster Mai', tag: 'Donnerstag', typ: 'fest' },
+        { datum: '08.06.2025', name: 'Pfingstsonntag', tag: 'Sonntag', typ: 'variabel' },
+        { datum: '09.06.2025', name: 'Pfingstmontag', tag: 'Montag', typ: 'variabel' },
+        { datum: '03.10.2025', name: 'Tag der Deutschen Einheit', tag: 'Freitag', typ: 'fest' },
+        { datum: '01.11.2025', name: 'Allerheiligen', tag: 'Samstag', typ: 'fest' },
+        { datum: '24.12.2025', name: 'Heiligabend', tag: 'Mittwoch', typ: 'fest' },
+        { datum: '25.12.2025', name: '1. Weihnachtstag', tag: 'Donnerstag', typ: 'fest' },
+        { datum: '26.12.2025', name: '2. Weihnachtstag', tag: 'Freitag', typ: 'fest' }
+    ],
+    2026: [
+        { datum: '01.01.2026', name: 'Neujahr', tag: 'Donnerstag', typ: 'fest' },
+        { datum: '03.04.2026', name: 'Karfreitag', tag: 'Freitag', typ: 'variabel' },
+        { datum: '05.04.2026', name: 'Ostersonntag', tag: 'Sonntag', typ: 'variabel' },
+        { datum: '06.04.2026', name: 'Ostermontag', tag: 'Montag', typ: 'variabel' },
+        { datum: '01.05.2026', name: 'Erster Mai', tag: 'Freitag', typ: 'fest' },
+        { datum: '24.05.2026', name: 'Pfingstsonntag', tag: 'Sonntag', typ: 'variabel' },
+        { datum: '25.05.2026', name: 'Pfingstmontag', tag: 'Montag', typ: 'variabel' },
+        { datum: '03.10.2026', name: 'Tag der Deutschen Einheit', tag: 'Samstag', typ: 'fest' },
+        { datum: '01.11.2026', name: 'Allerheiligen', tag: 'Sonntag', typ: 'fest' },
+        { datum: '24.12.2026', name: 'Heiligabend', tag: 'Donnerstag', typ: 'fest' },
+        { datum: '25.12.2026', name: '1. Weihnachtstag', tag: 'Freitag', typ: 'fest' },
+        { datum: '26.12.2026', name: '2. Weihnachtstag', tag: 'Samstag', typ: 'fest' }
+    ],
+    2027: [
+        { datum: '01.01.2027', name: 'Neujahr', tag: 'Freitag', typ: 'fest' },
+        { datum: '26.03.2027', name: 'Karfreitag', tag: 'Freitag', typ: 'variabel' },
+        { datum: '28.03.2027', name: 'Ostersonntag', tag: 'Sonntag', typ: 'variabel' },
+        { datum: '29.03.2027', name: 'Ostermontag', tag: 'Montag', typ: 'variabel' },
+        { datum: '01.05.2027', name: 'Erster Mai', tag: 'Samstag', typ: 'fest' },
+        { datum: '16.05.2027', name: 'Pfingstsonntag', tag: 'Sonntag', typ: 'variabel' },
+        { datum: '17.05.2027', name: 'Pfingstmontag', tag: 'Montag', typ: 'variabel' },
+        { datum: '03.10.2027', name: 'Tag der Deutschen Einheit', tag: 'Sonntag', typ: 'fest' },
+        { datum: '01.11.2027', name: 'Allerheiligen', tag: 'Montag', typ: 'fest' },
+        { datum: '24.12.2027', name: 'Heiligabend', tag: 'Freitag', typ: 'fest' },
+        { datum: '25.12.2027', name: '1. Weihnachtstag', tag: 'Samstag', typ: 'fest' },
+        { datum: '26.12.2027', name: '2. Weihnachtstag', tag: 'Sonntag', typ: 'fest' }
+    ]
+};
+
+const Feiertage = {
+    parseDate(dateStr) {
+        const [day, month, year] = dateStr.split('.');
+        return new Date(year, month - 1, day);
+    },
+    
+    getInRange(startDate, endDate) {
+        const result = [];
+        for (let year = startDate.getFullYear(); year <= endDate.getFullYear(); year++) {
+            const yearData = FEIERTAGE_DATA[year] || [];
+            for (const f of yearData) {
+                const fDate = this.parseDate(f.datum);
+                if (fDate >= startDate && fDate <= endDate) {
+                    result.push({ datum: f.datum, name: f.name });
+                }
+            }
+        }
+        return result;
+    }
+};
+
+// CONFIG
+const CONFIG = {
+    // ⚠️ DEMO MODE: true = test verileri kullan, false = n8n'den çek
+    demo: { enabled: true },
+    
+    // 🔗 n8n Webhook URLs - BURAYA KENDİ URL'LERİNİ YAZ
+    n8n: {
+        baseUrl: 'https://YOUR-N8N-INSTANCE.app.n8n.cloud/webhook',  // veya self-hosted: http://localhost:5678/webhook
+        endpoints: {
+            getKlienten: '/pflege24/klienten',
+            getAuftrag: '/pflege24/auftrag',
+            saveAbrechnung: '/pflege24/abrechnung'
+        }
+    },
+    preise: {
+        pflegeplus24: {
+            produkte: { 'bronze': 92, 'silber': 99, 'silber-plus': 109, 'gold': 119, 'exclusive': 129 },
+            zuschlaege: {
+                'startgebuehr': { einmalig: true, preis: 300 },
+                'expressService': { einmalig: true, preis: 350 },
+                'fuehrerschein': { einmalig: false, preis: 10 },
+                'zweitePersonHaushalt': { einmalig: false, preis: 10 },
+                'zweiteBetreuendePerson': { einmalig: false, preis: 20 },
+                'sonderbetreuung': { einmalig: false, preis: 15 },
+                'seniorenbetreuungPro': { einmalig: false, preis: 50 }
+            }
+        },
+        betreuung24: {
+            produkte: { 'bronze': 87, 'silber': 100, 'gold': 110, 'platin': 123 },
+            zuschlaege: {
+                'startgebuehr': { einmalig: true, preis: 300 },
+                'expressService': { einmalig: true, preis: 300 },
+                'fuehrerschein': { einmalig: false, preis: 8 },
+                'zweitePersonHaushalt': { einmalig: false, preis: 4 },
+                'zweiteBetreuendePerson': { einmalig: false, preis: 15 },
+                'sonderbetreuung': { einmalig: false, preis: 10 }
+            }
+        }
+    },
+    demoKlienten: [
+        { id: 'demo-1', name: 'Familie Müller', adresse: 'Musterstraße 1, 12345 Berlin' },
+        { id: 'demo-2', name: 'Familie Schmidt', adresse: 'Beispielweg 42, 54321 München' },
+        { id: 'demo-3', name: 'Familie Weber', adresse: 'Teststraße 99, 98765 Hamburg' }
+    ]
+};
+
+// CALCULATOR
+const Calculator = {
+    calculate(params) {
+        const { vertragsart, produkt, startDatum, endDatum, zuschlaege } = params;
+        const preise = CONFIG.preise[vertragsart];
+        const tagessatz = preise.produkte[produkt];
+        
+        const diffTime = Math.abs(endDatum - startDatum);
+        const gesamtTage = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        
+        const feiertageInRange = Feiertage.getInRange(startDatum, endDatum);
+        let saisonTage = 0;
+        
+        const current = new Date(startDatum);
+        while (current <= endDatum) {
+            const month = current.getMonth() + 1;
+            const day = current.getDate();
+            if ((month === 7 && day >= 1) || month === 8 || (month === 9 && day <= 15)) saisonTage++;
+            current.setDate(current.getDate() + 1);
+        }
+        
+        const grundverguetung = gesamtTage * tagessatz;
+        const feiertagZuschlag = feiertageInRange.length * tagessatz;
+        const saisonZuschlag = saisonTage * 5;
+        
+        let zuschlaegeTaeglich = 0, zuschlaege_einmalig = 0;
+        for (const id of zuschlaege) {
+            const z = preise.zuschlaege[id];
+            if (z) {
+                if (z.einmalig) zuschlaege_einmalig += z.preis;
+                else zuschlaegeTaeglich += z.preis * gesamtTage;
+            }
+        }
+        
+        const gesamtbetrag = grundverguetung + feiertagZuschlag + saisonZuschlag + zuschlaegeTaeglich + zuschlaege_einmalig;
+        const fmt = (n) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n);
+        const fmtDate = (d) => d.toLocaleDateString('de-DE');
+        
+        return {
+            input: { vertragsart, produkt, tagessatz, startDatum: fmtDate(startDatum), endDatum: fmtDate(endDatum) },
+            tage: { gesamt: gesamtTage, feiertage: feiertageInRange.length, saisonTage, feiertageDetails: feiertageInRange },
+            kosten: { grundverguetung, feiertagZuschlag, saisonZuschlag, zuschlaegeTaeglich, zuschlaege_einmalig },
+            gesamtbetrag,
+            formatted: { grundverguetung: fmt(grundverguetung), feiertagZuschlag: fmt(feiertagZuschlag), saisonZuschlag: fmt(saisonZuschlag), zuschlaegeTaeglich: fmt(zuschlaegeTaeglich), zuschlaege_einmalig: fmt(zuschlaege_einmalig), gesamtbetrag: fmt(gesamtbetrag) }
+        };
+    }
+};
+
+// PDF GENERATOR - Professional German Invoice Standard
+const PdfGenerator = {
+    jsPDF: null,
+    
+    // Şirket bilgileri - Gerçek verilerle değiştirin
+    company: {
+        name: 'PflegePlus24 GmbH',
+        slogan: 'Professionelle 24-Stunden-Betreuung',
+        street: 'Musterstraße 123',
+        city: '10115 Berlin',
+        country: 'Deutschland',
+        phone: '+49 (0) 30 123456-0',
+        fax: '+49 (0) 30 123456-99',
+        email: 'info@pflegeplus24.de',
+        website: 'www.pflegeplus24.de',
+        // Steuerliche Angaben
+        steuernummer: '27/123/45678',
+        ustIdNr: 'DE123456789',
+        handelsregister: 'HRB 12345 B',
+        amtsgericht: 'Amtsgericht Berlin-Charlottenburg',
+        geschaeftsfuehrer: 'Max Mustermann',
+        // Bankverbindung
+        bank: 'Deutsche Bank AG',
+        iban: 'DE89 3704 0044 0532 0130 00',
+        bic: 'COBADEFFXXX'
+    },
+    
+    // MwSt-Satz (0% für Pflegedienstleistungen nach §4 Nr. 16 UStG)
+    mwstSatz: 0,
+    mwstBefreit: true,
+    mwstBefreiungText: 'Steuerbefreit gemäß §4 Nr. 16 UStG',
+    
+    async loadLibrary() {
+        if (this.jsPDF) return;
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+            script.onload = () => { this.jsPDF = window.jspdf.jsPDF; resolve(); };
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    },
+    
+    generateRechnungsnummer() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+        return `RE-${year}${month}-${random}`;
+    },
+    
+    formatCurrency(amount) {
+        return new Intl.NumberFormat('de-DE', { 
+            style: 'currency', 
+            currency: 'EUR',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
+    },
+    
+    formatNumber(amount) {
+        return new Intl.NumberFormat('de-DE', { 
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
+    },
+    
+    async generateBase64(data, klient) {
+        await this.loadLibrary();
+        const doc = await this.createDocument(data, klient);
+        return doc.output('datauristring').split(',')[1];
+    },
+    
+    async createDocument(data, klient) {
+        await this.loadLibrary();
+        const doc = new this.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const marginLeft = 25;
+        const marginRight = 20;
+        const contentWidth = pageWidth - marginLeft - marginRight;
+        
+        const rechnungsnummer = this.generateRechnungsnummer();
+        const rechnungsdatum = new Date().toLocaleDateString('de-DE');
+        const faelligkeitsdatum = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('de-DE');
+        
+        let y = 20;
+        
+        // ============================================
+        // HEADER - Logo/Firmenname rechts oben
+        // ============================================
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(45, 55, 72);
+        doc.text(this.company.name, pageWidth - marginRight, y, { align: 'right' });
+        
+        y += 5;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(107, 114, 128);
+        doc.text(this.company.slogan, pageWidth - marginRight, y, { align: 'right' });
+        
+        // Kontaktdaten rechts
+        y += 8;
+        doc.setFontSize(8);
+        doc.text(`${this.company.street} • ${this.company.city}`, pageWidth - marginRight, y, { align: 'right' });
+        y += 4;
+        doc.text(`Tel: ${this.company.phone} • Fax: ${this.company.fax}`, pageWidth - marginRight, y, { align: 'right' });
+        y += 4;
+        doc.text(`${this.company.email} • ${this.company.website}`, pageWidth - marginRight, y, { align: 'right' });
+        
+        // ============================================
+        // ABSENDER-ZEILE (klein, über Empfänger)
+        // ============================================
+        y = 50;
+        doc.setFontSize(7);
+        doc.setTextColor(150);
+        doc.text(`${this.company.name} • ${this.company.street} • ${this.company.city}`, marginLeft, y);
+        
+        // ============================================
+        // EMPFÄNGER-ADRESSE (links)
+        // ============================================
+        y += 8;
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 41, 59);
+        doc.text(klient.name || 'Kunde', marginLeft, y);
+        
+        y += 5;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(71, 85, 105);
+        if (klient.adresse) {
+            const adressLines = klient.adresse.split(',').map(s => s.trim());
+            for (const line of adressLines) {
+                doc.text(line, marginLeft, y);
+                y += 5;
+            }
+        } else {
+            doc.text('Musterstraße 1', marginLeft, y);
+            y += 5;
+            doc.text('12345 Musterstadt', marginLeft, y);
+        }
+        
+        // ============================================
+        // RECHNUNGSDETAILS BOX (rechts neben Adresse)
+        // ============================================
+        const boxX = pageWidth - marginRight - 65;
+        const boxY = 55;
+        const boxWidth = 65;
+        const boxHeight = 32;
+        
+        // Hellgrauer Hintergrund
+        doc.setFillColor(249, 250, 251);
+        doc.setDrawColor(229, 231, 235);
+        doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 2, 2, 'FD');
+        
+        let detailY = boxY + 7;
+        doc.setFontSize(8);
+        doc.setTextColor(107, 114, 128);
+        doc.text('Rechnungsnummer:', boxX + 4, detailY);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 41, 59);
+        doc.text(rechnungsnummer, boxX + boxWidth - 4, detailY, { align: 'right' });
+        
+        detailY += 6;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(107, 114, 128);
+        doc.text('Rechnungsdatum:', boxX + 4, detailY);
+        doc.setTextColor(30, 41, 59);
+        doc.text(rechnungsdatum, boxX + boxWidth - 4, detailY, { align: 'right' });
+        
+        detailY += 6;
+        doc.setTextColor(107, 114, 128);
+        doc.text('Leistungszeitraum:', boxX + 4, detailY);
+        doc.setTextColor(30, 41, 59);
+        doc.text(`${data.input.startDatum} - ${data.input.endDatum}`, boxX + boxWidth - 4, detailY, { align: 'right' });
+        
+        detailY += 6;
+        doc.setTextColor(107, 114, 128);
+        doc.text('Fällig bis:', boxX + 4, detailY);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(220, 38, 38);
+        doc.text(faelligkeitsdatum, boxX + boxWidth - 4, detailY, { align: 'right' });
+        
+        // ============================================
+        // TITEL
+        // ============================================
+        y = 100;
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 41, 59);
+        doc.text('RECHNUNG', marginLeft, y);
+        
+        // Untertitel mit Vertragsart
+        y += 7;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(107, 114, 128);
+        const vertragsartName = data.input.vertragsart === 'pflegeplus24' ? 'PflegePlus24' : 'Betreuung24';
+        doc.text(`Leistungsabrechnung ${vertragsartName} • ${data.tage.gesamt} Betreuungstage`, marginLeft, y);
+        
+        // Trennlinie
+        y += 6;
+        doc.setDrawColor(229, 231, 235);
+        doc.setLineWidth(0.5);
+        doc.line(marginLeft, y, pageWidth - marginRight, y);
+        
+        // ============================================
+        // TABELLENKOPF
+        // ============================================
+        y += 8;
+        const tableY = y;
+        
+        // Header Hintergrund
+        doc.setFillColor(45, 55, 72);
+        doc.rect(marginLeft, y, contentWidth, 9, 'F');
+        
+        // Header Text
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        
+        const col1 = marginLeft + 3;
+        const col2 = marginLeft + 8;
+        const col3 = pageWidth - marginRight - 80;
+        const col4 = pageWidth - marginRight - 55;
+        const col5 = pageWidth - marginRight - 30;
+        const col6 = pageWidth - marginRight - 3;
+        
+        doc.text('Pos.', col1, y + 6);
+        doc.text('Beschreibung', col2 + 5, y + 6);
+        doc.text('Menge', col3, y + 6);
+        doc.text('Einheit', col4, y + 6);
+        doc.text('Einzelpreis', col5, y + 6);
+        doc.text('Gesamt', col6, y + 6, { align: 'right' });
+        
+        y += 9;
+        
+        // ============================================
+        // TABELLEN-ZEILEN
+        // ============================================
+        const rows = [];
+        let posNr = 1;
+        
+        // Grundvergütung
+        const produktName = data.input.produkt.charAt(0).toUpperCase() + data.input.produkt.slice(1);
+        rows.push({
+            pos: posNr++,
+            beschreibung: `${vertragsartName} Paket "${produktName}"`,
+            beschreibung2: '24-Stunden-Betreuung inkl. aller Standardleistungen',
+            menge: data.tage.gesamt,
+            einheit: 'Tage',
+            einzelpreis: data.input.tagessatz,
+            gesamt: data.kosten.grundverguetung
+        });
+        
+        // Feiertagszuschlag
+        if (data.kosten.feiertagZuschlag > 0) {
+            rows.push({
+                pos: posNr++,
+                beschreibung: 'Feiertagszuschlag',
+                beschreibung2: 'Zuschlag 100% an gesetzlichen Feiertagen',
+                menge: data.tage.feiertage,
+                einheit: 'Tage',
+                einzelpreis: data.input.tagessatz,
+                gesamt: data.kosten.feiertagZuschlag
+            });
+        }
+        
+        // Saisonzuschlag
+        if (data.kosten.saisonZuschlag > 0) {
+            rows.push({
+                pos: posNr++,
+                beschreibung: 'Saisonzuschlag',
+                beschreibung2: 'Sommersaison (01.07. - 15.09.)',
+                menge: data.tage.saisonTage,
+                einheit: 'Tage',
+                einzelpreis: 5.00,
+                gesamt: data.kosten.saisonZuschlag
+            });
+        }
+        
+        // Tägliche Zuschläge
+        if (data.kosten.zuschlaegeTaeglich > 0) {
+            const taeglicherSatz = data.kosten.zuschlaegeTaeglich / data.tage.gesamt;
+            rows.push({
+                pos: posNr++,
+                beschreibung: 'Zusatzleistungen (täglich)',
+                beschreibung2: 'Individuelle Zusatzleistungen lt. Vereinbarung',
+                menge: data.tage.gesamt,
+                einheit: 'Tage',
+                einzelpreis: taeglicherSatz,
+                gesamt: data.kosten.zuschlaegeTaeglich
+            });
+        }
+        
+        // Einmalige Gebühren
+        if (data.kosten.zuschlaege_einmalig > 0) {
+            rows.push({
+                pos: posNr++,
+                beschreibung: 'Einmalige Gebühren',
+                beschreibung2: 'Vermittlungs- und Servicegebühren',
+                menge: 1,
+                einheit: 'pauschal',
+                einzelpreis: data.kosten.zuschlaege_einmalig,
+                gesamt: data.kosten.zuschlaege_einmalig
+            });
+        }
+        
+        // Zeilen zeichnen
+        let isAlt = false;
+        for (const row of rows) {
+            const rowHeight = row.beschreibung2 ? 14 : 9;
+            
+            // Alternierender Hintergrund
+            if (isAlt) {
+                doc.setFillColor(249, 250, 251);
+                doc.rect(marginLeft, y, contentWidth, rowHeight, 'F');
+            }
+            
+            // Position
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(107, 114, 128);
+            doc.text(String(row.pos), col1, y + 6);
+            
+            // Beschreibung (Hauptzeile)
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(30, 41, 59);
+            doc.text(row.beschreibung, col2 + 5, y + 6);
+            
+            // Beschreibung (Unterzeile)
+            if (row.beschreibung2) {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(7);
+                doc.setTextColor(107, 114, 128);
+                doc.text(row.beschreibung2, col2 + 5, y + 11);
+            }
+            
+            // Menge
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(71, 85, 105);
+            doc.text(String(row.menge), col3, y + 6);
+            
+            // Einheit
+            doc.text(row.einheit, col4, y + 6);
+            
+            // Einzelpreis
+            doc.text(this.formatNumber(row.einzelpreis) + ' €', col5, y + 6);
+            
+            // Gesamt
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(30, 41, 59);
+            doc.text(this.formatNumber(row.gesamt) + ' €', col6, y + 6, { align: 'right' });
+            
+            y += rowHeight;
+            isAlt = !isAlt;
+        }
+        
+        // Trennlinie vor Summen
+        y += 3;
+        doc.setDrawColor(229, 231, 235);
+        doc.setLineWidth(0.3);
+        doc.line(pageWidth - marginRight - 70, y, pageWidth - marginRight, y);
+        
+        // ============================================
+        // SUMMEN-BEREICH
+        // ============================================
+        y += 8;
+        const summenX = pageWidth - marginRight - 70;
+        
+        // Zwischensumme (Netto)
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(107, 114, 128);
+        doc.text('Zwischensumme (netto):', summenX, y);
+        doc.setTextColor(30, 41, 59);
+        doc.text(this.formatNumber(data.gesamtbetrag) + ' €', col6, y, { align: 'right' });
+        
+        // MwSt
+        y += 6;
+        if (this.mwstBefreit) {
+            doc.setTextColor(107, 114, 128);
+            doc.text('MwSt. (0%):', summenX, y);
+            doc.setTextColor(30, 41, 59);
+            doc.text('0,00 €', col6, y, { align: 'right' });
+            
+            y += 4;
+            doc.setFontSize(7);
+            doc.setTextColor(107, 114, 128);
+            doc.text(this.mwstBefreiungText, summenX, y);
+        } else {
+            const mwstBetrag = data.gesamtbetrag * (this.mwstSatz / 100);
+            doc.setTextColor(107, 114, 128);
+            doc.text(`MwSt. (${this.mwstSatz}%):`, summenX, y);
+            doc.setTextColor(30, 41, 59);
+            doc.text(this.formatNumber(mwstBetrag) + ' €', col6, y, { align: 'right' });
+        }
+        
+        // Gesamtbetrag Box
+        y += 10;
+        const totalBoxY = y;
+        const totalBoxHeight = 14;
+        
+        doc.setFillColor(45, 55, 72);
+        doc.roundedRect(summenX - 5, totalBoxY, 75, totalBoxHeight, 2, 2, 'F');
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('Gesamtbetrag:', summenX, totalBoxY + 9);
+        
+        doc.setFontSize(12);
+        const bruttoBetrag = this.mwstBefreit ? data.gesamtbetrag : data.gesamtbetrag * (1 + this.mwstSatz / 100);
+        doc.text(this.formatCurrency(bruttoBetrag), col6, totalBoxY + 9, { align: 'right' });
+        
+        y = totalBoxY + totalBoxHeight + 15;
+        
+        // ============================================
+        // FEIERTAGE DETAILS (wenn vorhanden)
+        // ============================================
+        if (data.tage.feiertageDetails && data.tage.feiertageDetails.length > 0) {
+            doc.setFillColor(255, 251, 235);
+            doc.setDrawColor(245, 158, 11);
+            const feiertagBoxHeight = 8 + (data.tage.feiertageDetails.length * 5);
+            doc.roundedRect(marginLeft, y, contentWidth, feiertagBoxHeight, 2, 2, 'FD');
+            
+            y += 6;
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(180, 83, 9);
+            doc.text('Berechnete Feiertage im Leistungszeitraum:', marginLeft + 4, y);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.setTextColor(120, 53, 15);
+            for (const f of data.tage.feiertageDetails) {
+                y += 5;
+                doc.text(`• ${f.datum} – ${f.name}`, marginLeft + 8, y);
+            }
+            y += 10;
+        }
+        
+        // ============================================
+        // ZAHLUNGSHINWEIS
+        // ============================================
+        y += 5;
+        doc.setFillColor(239, 246, 255);
+        doc.setDrawColor(59, 130, 246);
+        doc.roundedRect(marginLeft, y, contentWidth, 22, 2, 2, 'FD');
+        
+        y += 7;
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 64, 175);
+        doc.text('Zahlungshinweis', marginLeft + 4, y);
+        
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(55, 65, 81);
+        doc.text(`Bitte überweisen Sie den Gesamtbetrag bis zum ${faelligkeitsdatum} auf folgendes Konto:`, marginLeft + 4, y);
+        
+        y += 5;
+        doc.setFont('helvetica', 'bold');
+        doc.text(`IBAN: ${this.company.iban}   •   BIC: ${this.company.bic}   •   ${this.company.bank}`, marginLeft + 4, y);
+        
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(107, 114, 128);
+        doc.text(`Verwendungszweck: ${rechnungsnummer} / ${klient.name || 'Kunde'}`, marginLeft + 4, y);
+        
+        // ============================================
+        // FOOTER
+        // ============================================
+        const footerY = pageHeight - 25;
+        
+        // Trennlinie
+        doc.setDrawColor(229, 231, 235);
+        doc.setLineWidth(0.5);
+        doc.line(marginLeft, footerY, pageWidth - marginRight, footerY);
+        
+        // Footer dreispaltig
+        const footerCol1 = marginLeft;
+        const footerCol2 = marginLeft + 60;
+        const footerCol3 = marginLeft + 120;
+        
+        let footerLineY = footerY + 5;
+        doc.setFontSize(7);
+        doc.setTextColor(107, 114, 128);
+        
+        // Spalte 1: Firma
+        doc.setFont('helvetica', 'bold');
+        doc.text(this.company.name, footerCol1, footerLineY);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${this.company.street}`, footerCol1, footerLineY + 4);
+        doc.text(`${this.company.city}`, footerCol1, footerLineY + 8);
+        doc.text(`Geschäftsführer: ${this.company.geschaeftsfuehrer}`, footerCol1, footerLineY + 12);
+        
+        // Spalte 2: Registerdaten
+        doc.setFont('helvetica', 'bold');
+        doc.text('Registergericht', footerCol2, footerLineY);
+        doc.setFont('helvetica', 'normal');
+        doc.text(this.company.amtsgericht, footerCol2, footerLineY + 4);
+        doc.text(`${this.company.handelsregister}`, footerCol2, footerLineY + 8);
+        doc.text(`USt-IdNr.: ${this.company.ustIdNr}`, footerCol2, footerLineY + 12);
+        
+        // Spalte 3: Bankverbindung
+        doc.setFont('helvetica', 'bold');
+        doc.text('Bankverbindung', footerCol3, footerLineY);
+        doc.setFont('helvetica', 'normal');
+        doc.text(this.company.bank, footerCol3, footerLineY + 4);
+        doc.text(`IBAN: ${this.company.iban}`, footerCol3, footerLineY + 8);
+        doc.text(`BIC: ${this.company.bic}`, footerCol3, footerLineY + 12);
+        
+        // Seitenzahl
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Seite 1 von 1`, pageWidth / 2, pageHeight - 8, { align: 'center' });
+        
+        return doc;
+    },
+    
+    async download(data, klient) {
+        const doc = await this.createDocument(data, klient);
+        const datum = data.input.startDatum.replace(/\./g, '-');
+        const kundeName = (klient.name || 'Kunde').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_äöüÄÖÜß-]/g, '');
+        const filename = `Rechnung_${datum}_${kundeName}.pdf`;
+        doc.save(filename);
+    }
+};
+
+// ========================================
+// HUBSPOT API SERVICE (via n8n)
+// ========================================
+const HubSpotApi = {
+    // Klienten listesini getir
+    async getKlienten() {
+        if (CONFIG.demo.enabled) {
+            return CONFIG.demoKlienten;
+        }
+        
+        const url = CONFIG.n8n.baseUrl + CONFIG.n8n.endpoints.getKlienten;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) throw new Error('Klienten konnten nicht geladen werden');
+        const data = await response.json();
+        return data.klienten || data;
+    },
+    
+    // Auftrag detaylarını getir
+    async getAuftrag(klientId) {
+        if (CONFIG.demo.enabled) {
+            return { vertragsart: 'pflegeplus24', produkt: 'gold', startDatum: '2025-12-01', endDatum: '2025-12-31' };
+        }
+        
+        const url = `${CONFIG.n8n.baseUrl}${CONFIG.n8n.endpoints.getAuftrag}?klientId=${klientId}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) throw new Error('Auftrag konnte nicht geladen werden');
+        return await response.json();
+    },
+    
+    // Abrechnung kaydet + PDF yükle
+    async saveAbrechnung(klientId, calculationData, pdfBase64) {
+        if (CONFIG.demo.enabled) {
+            console.log('Demo Mode: Abrechnung würde gespeichert werden', { klientId, calculationData });
+            return { success: true, message: 'Demo: Gespeichert' };
+        }
+        
+        const url = CONFIG.n8n.baseUrl + CONFIG.n8n.endpoints.saveAbrechnung;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                klientId: klientId,
+                abrechnung: {
+                    zeitraum: `${calculationData.input.startDatum} - ${calculationData.input.endDatum}`,
+                    vertragsart: calculationData.input.vertragsart,
+                    produkt: calculationData.input.produkt,
+                    gesamtTage: calculationData.tage.gesamt,
+                    feiertage: calculationData.tage.feiertage,
+                    saisonTage: calculationData.tage.saisonTage,
+                    grundverguetung: calculationData.kosten.grundverguetung,
+                    feiertagZuschlag: calculationData.kosten.feiertagZuschlag,
+                    saisonZuschlag: calculationData.kosten.saisonZuschlag,
+                    zuschlaegeTaeglich: calculationData.kosten.zuschlaegeTaeglich,
+                    zuschlaege_einmalig: calculationData.kosten.zuschlaege_einmalig,
+                    gesamtbetrag: calculationData.gesamtbetrag,
+                    erstelltAm: new Date().toISOString()
+                },
+                pdfBase64: pdfBase64,
+                pdfFilename: `Rechnung_${calculationData.input.startDatum.replace(/\./g, '-')}.pdf`
+            })
+        });
+        
+        if (!response.ok) throw new Error('Abrechnung konnte nicht gespeichert werden');
+        return await response.json();
+    }
+};
+
+// APP
+const App = {
+    state: { vertragsart: 'pflegeplus24', selectedKlient: null, selectedProdukt: null, lastCalculation: null },
+    elements: {},
+    
+    init() {
+        this.cacheElements();
+        this.bindEvents();
+        this.setDefaultDates();
+        this.updateCurrentDate();
+        this.loadKlienten();
+        this.updateUIForVertragsart();
+        this.renderFeiertageTable();
+    },
+    
+    cacheElements() {
+        this.elements = {
+            toggleBtns: document.querySelectorAll('.toggle-btn'),
+            klientSelect: document.getElementById('klientSelect'),
+            refreshKlienten: document.getElementById('refreshKlienten'),
+            startDatum: document.getElementById('startDatum'),
+            endDatum: document.getElementById('endDatum'),
+            produktCards: document.querySelectorAll('.product-card'),
+            zuschlagCheckboxes: document.querySelectorAll('.zuschlag-item input[type="checkbox"]'),
+            calculateBtn: document.getElementById('calculateBtn'),
+            exportPdf: document.getElementById('exportPdf'),
+            saveHubspot: document.getElementById('saveHubspot'),
+            resultPlaceholder: document.getElementById('resultPlaceholder'),
+            resultContent: document.getElementById('resultContent'),
+            actionButtons: document.getElementById('actionButtons'),
+            resultKlientName: document.getElementById('resultKlientName'),
+            resultZeitraum: document.getElementById('resultZeitraum'),
+            calcArbeitstage: document.getElementById('calcArbeitstage'),
+            calcFeiertage: document.getElementById('calcFeiertage'),
+            calcSaisontage: document.getElementById('calcSaisontage'),
+            costGrund: document.getElementById('costGrund'),
+            costFeiertag: document.getElementById('costFeiertag'),
+            costSaison: document.getElementById('costSaison'),
+            costZuschlaegeTaeglich: document.getElementById('costZuschlaegeTaeglich'),
+            costZuschlaegeEinmalig: document.getElementById('costZuschlaegeEinmalig'),
+            totalAmount: document.getElementById('totalAmount'),
+            feiertageDetails: document.getElementById('feiertageDetails'),
+            feiertageList: document.getElementById('feiertageList'),
+            currentDate: document.getElementById('currentDate'),
+            loadingOverlay: document.getElementById('loadingOverlay'),
+            toastContainer: document.getElementById('toastContainer'),
+            feiertageModal: document.getElementById('feiertageModal'),
+            btnHinweis: document.getElementById('btnHinweis'),
+            closeModal: document.getElementById('closeModal'),
+            feiertageTable: document.getElementById('feiertageTable')
+        };
+    },
+    
+    bindEvents() {
+        this.elements.toggleBtns.forEach(btn => btn.addEventListener('click', (e) => this.handleVertragsartChange(e)));
+        this.elements.refreshKlienten.addEventListener('click', () => this.loadKlienten());
+        this.elements.klientSelect.addEventListener('change', (e) => this.handleKlientChange(e));
+        this.elements.produktCards.forEach(card => card.addEventListener('click', (e) => this.handleProduktSelect(e)));
+        this.elements.calculateBtn.addEventListener('click', () => this.calculate());
+        this.elements.exportPdf.addEventListener('click', () => this.exportPdf());
+        this.elements.saveHubspot.addEventListener('click', () => this.saveToHubspot());
+        this.elements.btnHinweis.addEventListener('click', () => this.openModal());
+        this.elements.closeModal.addEventListener('click', () => this.closeModal());
+        this.elements.feiertageModal.addEventListener('click', (e) => { if (e.target === this.elements.feiertageModal) this.closeModal(); });
+    },
+    
+    openModal() { this.elements.feiertageModal.classList.add('active'); },
+    closeModal() { this.elements.feiertageModal.classList.remove('active'); },
+    
+    renderFeiertageTable() {
+        let html = '';
+        for (const year of [2025, 2026, 2027]) {
+            html += `<tr class="year-header"><td colspan="4">📅 ${year}</td></tr>`;
+            html += '<tr><th>Datum</th><th>Feiertag</th><th>Wochentag</th><th>Typ</th></tr>';
+            for (const f of FEIERTAGE_DATA[year]) {
+                const badge = f.typ === 'fest' ? '<span class="badge badge-fixed">Fest</span>' : '<span class="badge badge-variable">Variabel</span>';
+                html += `<tr><td>${f.datum}</td><td>${f.name}</td><td>${f.tag}</td><td>${badge}</td></tr>`;
+            }
+        }
+        this.elements.feiertageTable.innerHTML = html;
+    },
+    
+    setDefaultDates() {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        this.elements.startDatum.value = firstDay.toISOString().split('T')[0];
+        this.elements.endDatum.value = lastDay.toISOString().split('T')[0];
+    },
+    
+    updateCurrentDate() {
+        this.elements.currentDate.textContent = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+    },
+    
+    async loadKlienten() {
+        this.showLoading(true);
+        try {
+            const klienten = await HubSpotApi.getKlienten();
+            this.elements.klientSelect.innerHTML = '<option value="">-- Klient wählen --</option>';
+            klienten.forEach(k => {
+                const opt = document.createElement('option');
+                opt.value = k.id; opt.textContent = k.name; opt.dataset.klient = JSON.stringify(k);
+                this.elements.klientSelect.appendChild(opt);
+            });
+            this.showToast(`${klienten.length} Klienten geladen`, 'success');
+        } catch (error) {
+            this.showToast('Fehler: ' + error.message, 'error');
+        }
+        this.showLoading(false);
+    },
+    
+    handleVertragsartChange(e) {
+        const btn = e.currentTarget;
+        this.elements.toggleBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.state.vertragsart = btn.dataset.vertragsart;
+        this.state.selectedProdukt = null;
+        this.updateUIForVertragsart();
+    },
+    
+    updateUIForVertragsart() {
+        const isPP24 = this.state.vertragsart === 'pflegeplus24';
+        this.elements.produktCards.forEach(card => {
+            const preis = isPP24 ? parseInt(card.dataset.preisPp24) : parseInt(card.dataset.preisBt24);
+            const priceEl = card.querySelector('.price-value');
+            if (preis === 0) { card.classList.add('hidden'); } else { card.classList.remove('hidden'); priceEl.textContent = preis; }
+            card.classList.remove('active');
+        });
+        document.querySelectorAll('.zuschlag-item').forEach(item => {
+            const cb = item.querySelector('input');
+            const preis = isPP24 ? parseInt(cb.dataset.preisPp24) : parseInt(cb.dataset.preisBt24);
+            if (item.classList.contains('pp24-only') && !isPP24) { item.classList.add('hidden'); }
+            else if (preis === 0) { item.classList.add('hidden'); }
+            else { item.classList.remove('hidden'); }
+            const preisEl = item.querySelector('.preis-value');
+            if (preisEl) preisEl.textContent = preis;
+            cb.checked = false;
+        });
+    },
+    
+    handleKlientChange(e) {
+        const opt = e.target.selectedOptions[0];
+        this.state.selectedKlient = opt.value ? JSON.parse(opt.dataset.klient) : null;
+    },
+    
+    handleProduktSelect(e) {
+        const card = e.currentTarget;
+        this.elements.produktCards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        this.state.selectedProdukt = card.dataset.produkt;
+    },
+    
+    calculate() {
+        if (!this.state.selectedProdukt) { this.showToast('Bitte wählen Sie ein Produkt', 'error'); return; }
+        const zuschlaege = [];
+        this.elements.zuschlagCheckboxes.forEach(cb => { if (cb.checked) zuschlaege.push(cb.id); });
+        const result = Calculator.calculate({
+            vertragsart: this.state.vertragsart, produkt: this.state.selectedProdukt,
+            startDatum: new Date(this.elements.startDatum.value), endDatum: new Date(this.elements.endDatum.value), zuschlaege
+        });
+        this.state.lastCalculation = result;
+        this.displayResults(result);
+        this.showToast('Berechnung abgeschlossen', 'success');
+    },
+    
+    displayResults(result) {
+        this.elements.resultPlaceholder.style.display = 'none';
+        this.elements.resultContent.style.display = 'block';
+        this.elements.actionButtons.style.display = 'grid';
+        this.elements.resultKlientName.textContent = this.state.selectedKlient?.name || 'Demo Klient';
+        this.elements.resultZeitraum.textContent = `${result.input.startDatum} - ${result.input.endDatum}`;
+        this.elements.calcArbeitstage.textContent = result.tage.gesamt;
+        this.elements.calcFeiertage.textContent = result.tage.feiertage;
+        this.elements.calcSaisontage.textContent = result.tage.saisonTage;
+        this.elements.costGrund.textContent = result.formatted.grundverguetung;
+        const showRow = (id, show) => { document.getElementById(id).style.display = show ? 'flex' : 'none'; };
+        showRow('rowFeiertag', result.kosten.feiertagZuschlag > 0);
+        if (result.kosten.feiertagZuschlag > 0) this.elements.costFeiertag.textContent = result.formatted.feiertagZuschlag;
+        showRow('rowSaison', result.kosten.saisonZuschlag > 0);
+        if (result.kosten.saisonZuschlag > 0) this.elements.costSaison.textContent = result.formatted.saisonZuschlag;
+        showRow('rowZuschlaegeTaeglich', result.kosten.zuschlaegeTaeglich > 0);
+        if (result.kosten.zuschlaegeTaeglich > 0) this.elements.costZuschlaegeTaeglich.textContent = result.formatted.zuschlaegeTaeglich;
+        showRow('rowZuschlaegeEinmalig', result.kosten.zuschlaege_einmalig > 0);
+        if (result.kosten.zuschlaege_einmalig > 0) this.elements.costZuschlaegeEinmalig.textContent = result.formatted.zuschlaege_einmalig;
+        this.elements.totalAmount.textContent = result.formatted.gesamtbetrag;
+        if (result.tage.feiertageDetails.length > 0) {
+            this.elements.feiertageDetails.style.display = 'block';
+            this.elements.feiertageList.innerHTML = result.tage.feiertageDetails.map(f => `<li>📅 ${f.datum} - ${f.name}</li>`).join('');
+        } else { this.elements.feiertageDetails.style.display = 'none'; }
+    },
+    
+    showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+        toast.innerHTML = `<span>${icons[type]}</span> ${message}`;
+        this.elements.toastContainer.appendChild(toast);
+        setTimeout(() => { toast.remove(); }, 3000);
+    },
+    
+    async exportPdf() {
+        if (!this.state.lastCalculation) { this.showToast('Bitte führen Sie zuerst eine Berechnung durch', 'error'); return; }
+        this.showLoading(true);
+        try {
+            await PdfGenerator.download(this.state.lastCalculation, this.state.selectedKlient || { name: 'Demo Klient' });
+            this.showToast('PDF wurde heruntergeladen', 'success');
+        } catch (error) { this.showToast('Fehler beim PDF-Export: ' + error.message, 'error'); }
+        this.showLoading(false);
+    },
+    
+    showLoading(show) { this.elements.loadingOverlay.classList.toggle('active', show); },
+    
+    async saveToHubspot() {
+        if (!this.state.lastCalculation) {
+            this.showToast('Bitte führen Sie zuerst eine Berechnung durch', 'error');
+            return;
+        }
+        if (!this.state.selectedKlient) {
+            this.showToast('Bitte wählen Sie einen Klienten aus', 'error');
+            return;
+        }
+        
+        this.showLoading(true);
+        try {
+            // PDF'i Base64 olarak oluştur
+            const pdfBase64 = await PdfGenerator.generateBase64(this.state.lastCalculation, this.state.selectedKlient);
+            
+            // n8n üzerinden HubSpot'a kaydet
+            const result = await HubSpotApi.saveAbrechnung(
+                this.state.selectedKlient.id,
+                this.state.lastCalculation,
+                pdfBase64
+            );
+            
+            this.showToast('✅ Abrechnung wurde in HubSpot gespeichert!', 'success');
+            console.log('HubSpot Response:', result);
+        } catch (error) {
+            this.showToast('Fehler beim Speichern: ' + error.message, 'error');
+            console.error(error);
+        }
+        this.showLoading(false);
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => App.init());
+    </script>
+</body>
+</html>
